@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Mini CA — không push khoá riêng tư
+certs/
+*.pem
+
+# Uploads
+securecrypto/upload/
+crypto-toolkit/securecrypto/upload/
+
+
+# File rác sinh ra trong quá trình chạy lab
+*.enc
+*.dec
+test_aes.txt
