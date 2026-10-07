@@ -1,0 +1,25 @@
+body {
+    font-family: monospace;
+    background: #1e1e1e;
+    color: #eeeeee;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+input,
+select,
+button {
+    margin: 5px;
+    padding: 8px;
+}
+
+pre {
+    background: #2e2e2e;
+    padding: 10px;
+    border-left: 4px solid #4caf50;
+    white-space: pre-wrap;
+}

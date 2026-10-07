@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>NetRecon</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>
+            NetRecon - Network Reconnaissance Toolkit
+        </h1>
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
+
+</body>
+
+</html>
