@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Vulnerability Scanner</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        input[type="text"], button { padding: 0.5em; margin: 0.5em 0; width: 100%; box-sizing: border-box; }
+        .error { color: #b00; }
+    </style>
+</head>
+<body>
+    <h2>Web Vulnerability Scanner</h2>
+    <p>Chỉ kiểm thử URL thuộc môi trường lab hoặc hệ thống được phép.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="POST">
+        <label for="url">URL cần kiểm thử:</label>
+        <input id="url" type="text" name="url" required placeholder="http://127.0.0.1:8000/" />
+        <p>Chọn công cụ kiểm thử:</p>
+        <label><input type="checkbox" name="scanner" value="xss" checked> XSS Scanner</label><br>
+        <label><input type="checkbox" name="scanner" value="sql" checked> SQL Injection Tester</label><br>
+        <label><input type="checkbox" name="scanner" value="csrf" checked> CSRF Detector</label><br>
+        <label><input type="checkbox" name="scanner" value="ssrf" checked> SSRF Tester</label><br>
+        <button type="submit">Bắt đầu kiểm thử</button>
+    </form>
+</body>
+</html>
