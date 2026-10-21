@@ -58,10 +58,6 @@ Gửi lệnh POST đến `/api/sandbox` để thực thi lệnh `echo Hello Sand
 
 ![DAST API Sandbox](image/10.png)
 
-*(Các ảnh từ 11.png đến 15.png có thể là log server hoặc các ảnh bạn chụp thêm, bạn có thể chèn thêm vào bên dưới nếu muốn)*
-
-![Log Server](image/11.png)
-
 ---
 ## KẾT LUẬN
 Bài thực hành đã giúp phân biệt rõ ràng giữa SAST (phân tích mã nguồn tĩnh qua AST) và DAST (phân tích hành vi động qua Runtime). Đã xây dựng thành công 2 công cụ nhỏ để tự động hóa việc phát hiện lỗ hổng bảo mật.
