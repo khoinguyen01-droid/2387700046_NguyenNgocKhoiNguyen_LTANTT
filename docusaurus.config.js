@@ -7,22 +7,22 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Lab 6 DevSecOps - Nguyen Ngoc Khoi Nguyen',
-  tagline: 'Securing CI/CD Pipeline with GitLab',
+  tagline: 'Securing CI/CD Pipeline with GitHub Pages',
   favicon: 'img/favicon.ico',
 
   future: {
     v4: true,
   },
 
-  // 1. Cấu hình URL production chính xác cho GitLab Pages
-  url: 'https://nguyenngockhoinguyen.gitlab.io',
+  // 1. URL production của GitHub Pages
+  url: 'https://khoinguyen01-droid.github.io',
   
-  // 2. Cấu hình baseUrl khớp với tên repository của bạn trên GitLab
-  baseUrl: '/lab06-nguyenngockhoinguyen/',
+  // 2. BaseUrl khớp chính xác với tên repository của bạn trên GitHub
+  baseUrl: '/2387700046_NguyenNgocKhoiNguyen_LTANTT/',
 
-  // Cấu hình định danh cho GitLab
-  organizationName: 'nguyenngockhoinguyen', 
-  projectName: 'lab06-nguyenngockhoinguyen', 
+  // Thông tin tài khoản và dự án trên GitHub
+  organizationName: 'khoinguyen01-droid', 
+  projectName: '2387700046_NguyenNgocKhoiNguyen_LTANTT', 
 
   onBrokenLinks: 'throw',
 
@@ -39,7 +39,7 @@ const config = {
         docs: {
           sidebarPath: './sidebars.js',
           editUrl:
-            'https://gitlab.com/nguyenngockhoinguyen/lab06-nguyenngockhoinguyen/-/tree/main/',
+            'https://github.com/khoinguyen01-droid/2387700046_NguyenNgocKhoiNguyen_LTANTT/tree/main/',
         },
         blog: {
           showReadingTime: true,
@@ -48,7 +48,7 @@ const config = {
             xslt: true,
           },
           editUrl:
-            'https://gitlab.com/nguyenngockhoinguyen/lab06-nguyenngockhoinguyen/-/tree/main/',
+            'https://github.com/khoinguyen01-droid/2387700046_NguyenNgocKhoiNguyen_LTANTT/tree/main/',
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'warn',
@@ -82,8 +82,8 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://gitlab.com/nguyenngockhoinguyen/lab06-nguyenngockhoinguyen',
-            label: 'GitLab Repo',
+            href: 'https://github.com/khoinguyen01-droid/2387700046_NguyenNgocKhoiNguyen_LTANTT',
+            label: 'GitHub Repo',
             position: 'right',
           },
         ],
@@ -108,13 +108,13 @@ const config = {
                 to: '/blog',
               },
               {
-                label: 'GitLab',
-                href: 'https://gitlab.com/nguyenngockhoinguyen/lab06-nguyenngockhoinguyen',
+                label: 'GitHub',
+                href: 'https://github.com/khoinguyen01-droid/2387700046_NguyenNgocKhoiNguyen_LTANTT',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Nguyễn Ngọc Khôi Nguyên. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Nguyễn Ngọc Khôi Nguyên (2387700046). Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
