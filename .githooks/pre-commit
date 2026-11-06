@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""
+Pre-commit hook: Tự động quét và phát hiện thông tin nhạy cảm bị hardcode
+(API keys, mật khẩu, JWT, private keys, database credentials...).
+Ngăn chặn commit nếu phát hiện nguy cơ rò rỉ bí mật bảo mật.
+"""
+
+import os
+import re
+import subprocess
+import sys
+
+# Định nghĩa các mẫu Regex nhận diện dữ liệu nhạy cảm
+SENSITIVE_PATTERNS = [
+    {
+        "name": "RSA / OpenSSH / PGP Private Key",
+        "pattern": re.compile(r"-----BEGIN (?:RSA|DSA|EC|OPENSSH|PGP|ENCRYPTED|PRIVATE) KEY-----"),
+    },
+    {
+        "name": "AWS Access Key ID",
+        "pattern": re.compile(r"\b(AKIA[0-9A-Z]{16})\b"),
+    },
+    {
+        "name": "AWS Secret Access Key",
+        "pattern": re.compile(r"""(?i)aws(?:_secret_access_key|_secret_key)?\s*[:=]\s*['"][0-9a-zA-Z/+]{40}['"]"""),
+    },
+    {
+        "name": "GitHub Personal Access Token",
+        "pattern": re.compile(r"\b(gh[pousr]_[A-Za-z0-9_]{36,255}|gho_[A-Za-z0-9_]{36,255})\b"),
+    },
+    {
+        "name": "Google API Key",
+        "pattern": re.compile(r"\b(AIza[0-9A-Za-z\-_]{35})\b"),
+    },
+    {
+        "name": "OpenAI API Key",
+        "pattern": re.compile(r"\b(sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9_-]{20,})\b"),
+    },
+    {
+        "name": "Slack Token",
+        "pattern": re.compile(r"\b(xox[baprs]-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*)\b"),
+    },
+    {
+        "name": "Database Connection String with Credentials",
+        "pattern": re.compile(r"""(?i)(?:postgres|mysql|mongodb(?:\+srv)?|redis):\/\/[a-zA-Z0-9_.-]+:(?:[^@\s/]+)@[a-zA-Z0-9_.-]+"""),
+    },
+    {
+        "name": "Hardcoded Password / Secret",
+        "pattern": re.compile(r"""(?i)\b(?:password|passwd|pwd|db_pass|secret_key|client_secret)\s*[:=]\s*['"]([^'"]{6,})['"]"""),
+    },
+    {
+        "name": "Generic API Key / Access Token",
+        "pattern": re.compile(r"""(?i)\b(?:api_key|api_secret|access_token|auth_token)\s*[:=]\s*['"]([a-zA-Z0-9_\-]{20,})['"]"""),
+    },
+]
+
+# Các file và thư mục bỏ qua không quét
+IGNORED_FILES = {
+    ".githooks/pre-commit",
+    "package-lock.json",
+    "poetry.lock",
+    "yarn.lock",
+    "Pipfile.lock",
+}
+
+# Các placeholder giả định phổ biến không coi là secret thực tế
+SAFE_PLACEHOLDERS = {
+    "password", "your_password", "changeme", "admin", "123456",
+    "dummy", "placeholder", "secret", "none", "null", "undefined",
+    "your_api_key_here", "example", "<password>", "test",
+}
+
+
+def mask_secret(text: str) -> str:
+    """Che giấu chuỗi nhạy cảm để không bị lộ trên màn hình console."""
+    text = text.strip("'\"")
+    if len(text) <= 8:
+        return "*" * len(text)
+    return text[:3] + "*" * (len(text) - 6) + text[-3:]
+
+
+def get_staged_files():
+    """Lấy danh sách các tệp đang được stage (chuẩn bị commit)."""
+    cmd = ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        return []
+    return [line.strip() for line in result.stdout.strip().splitlines() if line.strip()]
+
+
+def get_staged_content(file_path: str) -> str:
+    """Đọc nội dung tệp ở trạng thái staged."""
+    cmd = ["git", "show", f":{file_path}"]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, errors="ignore")
+    if result.returncode != 0:
+        return ""
+    return result.stdout
+
+
+def is_binary_file(file_path: str) -> bool:
+    """Kiểm tra tệp nhị phân dựa trên phần mở rộng."""
+    binary_extensions = {
+        ".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf",
+        ".zip", ".tar", ".gz", ".7z", ".exe", ".dll", ".so",
+        ".pyc", ".db", ".sqlite", ".docx", ".xlsx"
+    }
+    _, ext = os.path.splitext(file_path)
+    return ext.lower() in binary_extensions
+
+
+def scan_file(file_path: str):
+    """Quét từng dòng của tệp staged để tìm secret."""
+    if file_path in IGNORED_FILES or is_binary_file(file_path):
+        return []
+
+    content = get_staged_content(file_path)
+    violations = []
+
+    for line_num, line in enumerate(content.splitlines(), start=1):
+        # Cho phép bỏ qua nếu có chú thích inline # nosec hoặc # allowlist-secret
+        if "# nosec" in line or "# allowlist-secret" in line:
+            continue
+
+        for rule in SENSITIVE_PATTERNS:
+            match = rule["pattern"].search(line)
+            if match:
+                # Kiểm tra xem có phải placeholder an toàn không
+                matched_val = match.group(1) if match.groups() else match.group(0)
+                clean_val = matched_val.strip("'\"").lower()
+                if clean_val in SAFE_PLACEHOLDERS:
+                    continue
+
+                violations.append({
+                    "file": file_path,
+                    "line": line_num,
+                    "rule": rule["name"],
+                    "matched": mask_secret(matched_val),
+                })
+                break  # Báo 1 lỗi trên mỗi dòng là đủ
+
+    return violations
+
+
+def main():
+    staged_files = get_staged_files()
+    if not staged_files:
+        sys.exit(0)
+
+    total_violations = []
+
+    for file_path in staged_files:
+        violations = scan_file(file_path)
+        if violations:
+            total_violations.extend(violations)
+
+    if total_violations:
+        print("\n" + "=" * 70)
+        print("\033[91m[BẢO MẬT] PHÁT HIỆN THÔNG TIN NHẠY CẢM TRONG MÃ NGUỒN ĐƯỢC COMMIT!\033[0m")
+        print("=" * 70)
+
+        for v in total_violations:
+            print(f"  \033[93mFile:\033[0m {v['file']}:{v['line']}")
+            print(f"  \033[93mLoại bí mật:\033[0m {v['rule']}")
+            print(f"  \033[93mGiá trị (đã che):\033[0m {v['matched']}")
+            print("-" * 70)
+
+        print("\033[91m=> COMMIT BỊ HUỶ BỎ ĐỂ BẢO VỆ AN TOÀN HỆ THỐNG!\033[0m")
+        print("Hướng dẫn khắc phục:")
+        print("  1. Hãy di chuyển các API key, mật khẩu vào biến môi trường (.env).")
+        print("  2. Sử dụng thư viện `python-dotenv` hoặc `os.getenv()` để đọc cấu hình.")
+        print("  3. Thêm file `.env` vào `.gitignore` để không commit lên repo.")
+        print("  4. Nếu là giá trị giả lập trong test, thêm comment `# nosec` cuối dòng.")
+        print("=" * 70 + "\n")
+        sys.exit(1)
+
+    print("\033[92m[AN TOÀN] Quét bảo mật hoàn tất: Không phát hiện secret bị hardcode.\033[0m")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
