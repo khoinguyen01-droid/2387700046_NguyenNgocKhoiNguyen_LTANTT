@@ -1,0 +1,88 @@
+# BÁO CÁO THỰC HÀNH LAB 1: CƠ SỞ LẬP TRÌNH BẢO MẬT & KIỂM TRA ĐẦU VÀO
+
+## 📋 Thông tin sinh viên
+* **Họ và tên:** Nguyễn Ngọc Khôi Nguyên
+* **MSSV:** 2387700046
+* **Lớp:** 23DATA1
+* **Môn học:** Lập trình An ninh Thông tin (LTANTT) - HUTECH
+
+---
+
+## 📌 Tổng quan Bài Lab 1
+Bài thực hành tập trung vào việc áp dụng các nguyên tắc **Secure by Design** và **OWASP Secure Coding Practices**, bao gồm:
+1. **Xây dựng thư viện `SecureValidator`:** Kiểm tra và làm sạch dữ liệu đầu vào (Email, URL, Filename chống Path Traversal, SQL Injection, XSS).
+2. **Git Security & Pre-commit Hooks:** Tự động quét thông tin nhạy cảm (API Key, Token) và chặn lệnh commit mã nguồn không an toàn.
+3. **SecureLogger & Tamper Detection:** Ghi log bảo mật có che dấu thông tin cá nhân (PII Masking) và phát hiện chỉnh sửa log trái phép.
+4. **Kiểm thử giao diện Web Flask:** Xây dựng ứng dụng web trực quan để kiểm chứng các tính năng bảo mật.
+
+---
+
+## 🔍 Hướng dẫn thực hiện và Minh chứng Chi tiết (9 Ảnh)
+
+### 1. Kiểm thử Unit Test toàn bộ hệ thống bằng Pytest
+* **Mô tả:** Chạy bộ kiểm thử tự động `pytest` để xác thực toàn bộ các hàm trong core validator và logger.
+* **Kết quả:** Tổng cộng 31/31 test cases đều vượt qua thành công (`31 passed`).
+![Minh chứng 1](images/1.png)
+
+---
+
+### 2. Kiểm thử tương tác trực tiếp qua Python Interactive Shell
+* **Mô tả:** Mở Python REPL để kiểm tra nhanh các hàm làm sạch dữ liệu (`sanitize_sql_input`, `sanitize_html_input`, `validate_filename`, `validate_url`) với các chuỗi tấn công mẫu.
+* **Kết quả:** Các ký tự đặc biệt nguy hiểm bị loại bỏ và mã hóa chính xác.
+![Minh chứng 2](images/2.png)
+
+---
+
+### 3. Chạy script kiểm thử thủ công (`run_test_manual.py`)
+* **Mô tả:** Thực thi kịch bản test thủ công để kiểm chứng khả năng phòng chống các lỗ hổng OWASP Top 10.
+* **Kết quả:** 
+  * Chống SQL Injection thành công.
+  * Lọc XSS hiệu quả.
+  * Chặn đứng đường dẫn Path Traversal (`../../etc/passwd` -> `False`).
+  * Kiểm tra tính hợp lệ của URL (Chống SSRF).
+![Minh chứng 3](images/3.png)
+
+---
+
+### 4. Kiểm thử Pre-commit Hook (Git Security - Chặn mã nguồn độc hại)
+* **Mô tả:** Cố gắng commit một file `test_leak.py` chứa hardcoded API Key (`AIzaSyD-TestKey1234567890abcdef`).
+* **Kết quả:** Pre-commit hook tự động kích hoạt, quét mẫu `SENSITIVE_PATTERNS`, in cảnh báo màu đỏ và **chặn đứng** lệnh `git commit` để bảo vệ hệ thống.
+![Minh chứng 4](images/4.png)
+
+---
+
+### 5. Kiểm thử hệ thống SecureLogger và Tamper Detection
+* **Mô tả:** Chạy kịch bản kiểm thử log `run_logger_test.py` để ghi log chứa thông tin định danh cá nhân (PII như số điện thoại, email) và kiểm tra tính toàn vẹn.
+* **Kết quả:** Hệ thống tự động che dấu PII thành công (`091****678`, `k***@gmail.com`) và xác thực trạng thái toàn vẹn của tệp log.
+![Minh chứng 5](images/5.png)
+
+---
+
+### 6. Khởi động giao diện Web Flask (`SecureValidator`)
+* **Mô tả:** Chạy ứng dụng web Flask (`python3 app.py`) và truy cập vào `http://127.0.0.1:5000/` để hiển thị giao diện tương tác với tiêu đề cá nhân hóa.
+* **Kết quả:** Giao diện PicoCSS tải thành công với đầy đủ các ô nhập liệu bảo mật.
+![Minh chứng 6](images/6.png)
+
+---
+
+### 7. Kiểm thử mã hóa XSS trên giao diện Web
+* **Mô tả:** Nhập đoạn mã độc JavaScript (`<script>alert("XSS")</script>`) vào ô HTML Input trên giao diện web.
+* **Kết quả:** Hệ thống tự động mã hóa ký tự đặc biệt thành dạng an toàn, ngăn chặn hoàn hảo kịch bản tấn công Cross-Site Scripting.
+![Minh chứng 7](images/7.png)
+
+---
+
+### 8. Kiểm thử định dạng hợp lệ trên giao diện Web
+* **Mô tả:** Nhập các dữ liệu chuẩn (Email hợp lệ, URL hợp lệ, tên file `report.pdf`) vào form web và nhấn "Xác thực ngay".
+* **Kết quả:** Hệ thống phản hồi trạng thái hợp lệ màu xanh rõ ràng.
+![Minh chứng 8](images/8.png)
+
+---
+
+### 9. Kiểm thử chặn tấn công Path Traversal trên giao diện Web
+* **Mô tả:** Thử nghiệm nhập đường dẫn vượt thư mục độc hại `../../etc/passwd` vào ô Filename trên giao diện web.
+* **Kết quả:** Hệ thống nhận diện và cảnh báo **"Tên file không hợp lệ"** bằng chữ màu đỏ, bảo vệ an toàn cho hệ thống tệp tin của máy chủ.
+![Minh chứng 9](images/9.png)
+
+---
+*© 2026 - Nguyễn Ngọc Khôi Nguyên | HUTECH Information Security*
